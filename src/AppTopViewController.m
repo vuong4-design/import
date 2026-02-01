@@ -76,6 +76,13 @@
 	[self.view addSubview: self.usernameTextField];
 	[self.view addSubview: self.passwordTextField];
 	[self.view addSubview: submitButton];
+
+	UILabel *modeLabel = [[UILabel alloc] initWithFrame:CGRectMake(260, 50, 200, 24)];
+	modeLabel.textAlignment = NSTextAlignmentRight;
+	modeLabel.font = [UIFont boldSystemFontOfSize:12.0];
+	[self.view addSubview: modeLabel];
+	self.modeIndicatorLabel = modeLabel;
+	[self updateModeIndicator:NO];
 }
 
 
@@ -179,6 +186,18 @@
 	[self.passwordTextField resignFirstResponder];
 }
 
-@end
+- (void)updateModeIndicator:(BOOL)isExportMode {
+	if (!self.modeIndicatorLabel) {
+		return;
+	}
+	if (isExportMode) {
+		self.modeIndicatorLabel.text = @"Export Mode ON";
+		self.modeIndicatorLabel.textColor = [UIColor colorWithRed:0.9 green:0.2 blue:0.2 alpha:1.0];
+	} else {
+		self.modeIndicatorLabel.text = @"Import Mode";
+		self.modeIndicatorLabel.textColor = [UIColor whiteColor];
+	}
+}
 
+@end
 

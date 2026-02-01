@@ -123,22 +123,53 @@
 
 	modeControl.frame = CGRectMake(10, 45, 240, 30);
 	[self.appTopViewController.view addSubview:modeControl];
+	[self.appTopViewController updateModeIndicator:[ExportManager shared].exportMode];
 }
 
 - (void)modeChanged:(UISegmentedControl *)control {
 	BOOL isExportMode = (control.selectedSegmentIndex == 1);
-	[ExportManager shared].exportMode = isExportMode;
 
 	if (isExportMode) {
-		[
-			Alert
-				show:^(){
-					NSLog(@"DEBUG* export mode enabled");
-				}
-				title: @"Export Mode"
-				message: @"Items purchased will be saved to inventory, not added to game."
+		UIAlertController *alert = [UIAlertController
+			alertControllerWithTitle:@"Confirm Export Mode"
+												message:@"Export mode will block app delivery and store items to inventory."
+									 preferredStyle:UIAlertControllerStyleAlert];
+		UIAlertAction *cancelAction = [
+			UIAlertAction
+				actionWithTitle:@"Cancel"
+									style:UIAlertActionStyleCancel
+								handler:^(UIAlertAction *action) {
+									(void)action;
+									control.selectedSegmentIndex = 0;
+									[ExportManager shared].exportMode = NO;
+									[self.appTopViewController updateModeIndicator:NO];
+								}
 		];
+		UIAlertAction *confirmAction = [
+			UIAlertAction
+				actionWithTitle:@"Enable"
+									style:UIAlertActionStyleDestructive
+								handler:^(UIAlertAction *action) {
+									(void)action;
+									[ExportManager shared].exportMode = YES;
+									[self.appTopViewController updateModeIndicator:YES];
+									[
+										Alert
+											show:^(){
+												NSLog(@"DEBUG* export mode enabled");
+											}
+											title: @"Export Mode"
+											message: @"Items purchased will be saved to inventory, not added to game."
+									];
+								}
+		];
+		[alert addAction:cancelAction];
+		[alert addAction:confirmAction];
+		[self presentViewController:alert animated:YES completion:nil];
+		return;
 	} else {
+		[ExportManager shared].exportMode = NO;
+		[self.appTopViewController updateModeIndicator:NO];
 		[
 			Alert
 				show:^(){

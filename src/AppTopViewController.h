@@ -7,9 +7,11 @@
 
 - (UIButton *)createSubmitButton;
 - (void) dismissKeyboard;
+- (void)updateModeIndicator:(BOOL)isExportMode;
 
 @property (weak, nonatomic) IBOutlet UITextField *usernameTextField;
 @property (weak, nonatomic) IBOutlet UITextField *passwordTextField;
+@property (weak, nonatomic) UILabel *modeIndicatorLabel;
 @property (retain, nonatomic) AuthModel *authModel; // @synthesize authModel=_authModel;
 
 @end
