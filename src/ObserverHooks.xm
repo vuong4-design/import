@@ -8,8 +8,23 @@
 %hook SKPaymentQueue
 
 - (void)addTransactionObserver:(id<SKPaymentTransactionObserver>)observer {
-	[[ObserverManager sharedManager] trackObserver:observer];
-	%orig(observer);
+	static BOOL hasAddedRoutingObserver = NO;
+	ObserverManager *manager = [ObserverManager sharedManager];
+	if ([manager isRoutingObserver:observer]) {
+		%orig(observer);
+		return;
+	}
+
+	NSInteger priority = 10;
+	if ([NSStringFromClass([observer class]) isEqualToString:@"VBStoreKitManager"]) {
+		priority = 0;
+	}
+
+	[manager registerObserver:observer priority:priority];
+	if (!hasAddedRoutingObserver) {
+		hasAddedRoutingObserver = YES;
+		%orig([manager routingObserver]);
+	}
 }
 
 %end

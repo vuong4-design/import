@@ -5,7 +5,10 @@
 @interface ObserverManager : NSObject
 
 + (instancetype)sharedManager;
-- (void)trackObserver:(id)observer;
+- (void)registerObserver:(id)observer priority:(NSInteger)priority;
+- (void)routeUpdatedTransactions:(NSArray *)transactions queue:(id)queue;
 - (NSArray<NSDictionary *> *)trackedObservers;
+- (BOOL)isRoutingObserver:(id)observer;
+- (id)routingObserver;
 
 @end

@@ -1,10 +1,38 @@
+#import <StoreKit/StoreKit.h>
+
 #import "ObserverManager.h"
 
 static NSString *const kObserverClassKey = @"class";
 static NSString *const kObserverTimestampKey = @"timestamp";
+static NSString *const kObserverPriorityKey = @"priority";
+
+@interface ObserverEntry : NSObject
+@property (nonatomic, weak) id observer;
+@property (nonatomic, assign) NSInteger priority;
+@property (nonatomic, strong) NSDate *timestamp;
+@property (nonatomic, copy) NSString *className;
+- (NSDictionary *)trackingInfo;
+@end
+
+@implementation ObserverEntry
+
+- (NSDictionary *)trackingInfo {
+	return @{
+		kObserverClassKey: self.className ?: @"(unknown)",
+		kObserverTimestampKey: self.timestamp ?: [NSDate dateWithTimeIntervalSince1970:0],
+		kObserverPriorityKey: @(self.priority),
+	};
+}
+
+@end
+
+@interface ObserverRoutingObserver : NSObject <SKPaymentTransactionObserver>
+@end
+
 
 @interface ObserverManager ()
-@property (nonatomic, strong) NSMutableArray<NSDictionary *> *observers;
+@property (nonatomic, strong) NSMutableArray<ObserverEntry *> *observerEntries;
+@property (nonatomic, strong) ObserverRoutingObserver *routingObserver;
 @end
 
 @implementation ObserverManager
@@ -21,27 +49,81 @@ static NSString *const kObserverTimestampKey = @"timestamp";
 - (instancetype)init {
 	self = [super init];
 	if (self) {
-		_observers = [[NSMutableArray alloc] init];
+		_observerEntries = [[NSMutableArray alloc] init];
+		_routingObserver = [[ObserverRoutingObserver alloc] init];
 	}
 	return self;
 }
 
-- (void)trackObserver:(id)observer {
+- (void)registerObserver:(id)observer priority:(NSInteger)priority {
 	if (!observer) {
 		return;
 	}
-	NSString *className = NSStringFromClass([observer class]) ?: @"(unknown)";
-	NSDate *timestamp = [NSDate date];
-	NSDictionary *entry = @{
-		kObserverClassKey: className,
-		kObserverTimestampKey: timestamp,
-	};
-	[self.observers addObject:entry];
-	NSLog(@"DEBUG* tracked SKPaymentTransactionObserver %@ at %@", className, timestamp);
+	for (ObserverEntry *entry in self.observerEntries) {
+		if (entry.observer == observer) {
+			return;
+		}
+	}
+
+	ObserverEntry *entry = [[ObserverEntry alloc] init];
+	entry.observer = observer;
+	entry.priority = priority;
+	entry.timestamp = [NSDate date];
+	entry.className = NSStringFromClass([observer class]) ?: @"(unknown)";
+	[self.observerEntries addObject:entry];
+	NSLog(@"DEBUG* tracked SKPaymentTransactionObserver %@ priority %ld at %@",
+		entry.className,
+		(long)priority,
+		entry.timestamp);
+}
+
+- (void)routeUpdatedTransactions:(NSArray *)transactions queue:(id)queue {
+	NSArray<ObserverEntry *> *entries = [self sortedEntries];
+	for (ObserverEntry *entry in entries) {
+		id observer = entry.observer;
+		if (!observer) {
+			continue;
+		}
+		if ([observer respondsToSelector:@selector(paymentQueue:updatedTransactions:)]) {
+			[observer paymentQueue:queue updatedTransactions:transactions];
+		}
+	}
+}
+
+- (NSArray<ObserverEntry *> *)sortedEntries {
+	return [self.observerEntries sortedArrayUsingComparator:^NSComparisonResult(ObserverEntry *a, ObserverEntry *b) {
+		if (a.priority < b.priority) {
+			return NSOrderedAscending;
+		}
+		if (a.priority > b.priority) {
+			return NSOrderedDescending;
+		}
+		return [a.timestamp compare:b.timestamp];
+	}];
 }
 
 - (NSArray<NSDictionary *> *)trackedObservers {
-	return [self.observers copy];
+	NSMutableArray<NSDictionary *> *results = [[NSMutableArray alloc] init];
+	for (ObserverEntry *entry in self.observerEntries) {
+		[results addObject:[entry trackingInfo]];
+	}
+	return [results copy];
+}
+
+- (BOOL)isRoutingObserver:(id)observer {
+	return observer == self.routingObserver;
+}
+
+- (id)routingObserver {
+	return self.routingObserver;
+}
+
+@end
+
+@implementation ObserverRoutingObserver
+
+- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
+	[[ObserverManager sharedManager] routeUpdatedTransactions:transactions queue:queue];
 }
 
 @end
