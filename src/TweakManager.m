@@ -5,6 +5,7 @@
 #import "ArknightsImporter.h"
 #import "LineageMLiveImporter.h"
 #import "SnailImporter.h"
+#import "ObserverHooks.h"
 #import "UniversalStoreKitHooks.h"
 
 static NSString *const kConfigEnableForAllAppsKey = @"EnableForAllApps";
@@ -186,8 +187,9 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 
 	NSLog(@"DEBUG* import initializing hooks");
 	[[NSNotificationCenter defaultCenter] removeObserver:self
-																								name:UIWindowDidBecomeKeyNotification
-																							object:nil];
+																									name:UIWindowDidBecomeKeyNotification
+																								object:nil];
+	InitObserverHooks();
 	InitUniversalStoreKitHooks();
 	InitLineage2MImporter();
 	InitArknightsImporter();
