@@ -120,7 +120,7 @@ static NSString *const kObserverPriorityKey = @"priority";
 }
 
 - (id)routingObserver {
-	return self.routingObserver;
+	return _routingObserver;
 }
 
 @end
