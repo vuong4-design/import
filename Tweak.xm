@@ -1,3 +1,5 @@
+#import "Foundation/Foundation.h"
+
 #import "src/Lineage2MImporter.h"
 #import "src/ArknightsImporter.h"
 #import "src/LineageMLiveImporter.h"
