@@ -5,6 +5,5 @@ then
   export $(cat .env | sed 's/#.*//g' | xargs)
 fi
 
-API_HOST=$API_HOST make do FINALPACKAGE=1
-
+API_HOST=$API_HOST make package FINALPACKAGE=1
 
