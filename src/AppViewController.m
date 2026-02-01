@@ -62,6 +62,14 @@
 					 object:nil
 	];
 
+	[
+		[NSNotificationCenter defaultCenter]
+			addObserver:self
+				 selector:@selector(importItemObserver:)
+						 name:@"notifyImportItem"
+					 object:nil
+	];
+
 	// Assign a payment observer so we can store item transaction info.
 	self.vbStoreKitManager = [[VBStoreKitManager alloc] init];
 
@@ -167,6 +175,45 @@
 		payment.productIdentifier = nProdID;
 		[[SKPaymentQueue defaultQueue] addPayment:payment];
 	}
+}
+
+- (void)importItemObserver:(NSNotification *)notification {
+	if (![[notification name] isEqualToString:@"notifyImportItem"]) {
+		return;
+	}
+
+	NSDictionary *userInfo = notification.userInfo;
+	NSString *inventoryID = userInfo[@"inventoryID"];
+	if (inventoryID.length == 0) {
+		return;
+	}
+
+	[[ExportManager shared] markItemAsImported:inventoryID completion:^(BOOL success) {
+		if (success) {
+			[
+				Alert
+					show:^(){
+						NSLog(@"DEBUG* import item completed");
+					}
+					title: @"Imported"
+					message: @"Item added to game from inventory."
+			];
+			[
+				[NSNotificationCenter defaultCenter]
+					postNotificationName:@"notifyRefreshProducts"
+												object:self
+			];
+		} else {
+			[
+				Alert
+					show:^(){
+						NSLog(@"DEBUG* import item failed");
+					}
+					title: @"Error"
+					message: @"Failed to import item."
+			];
+		}
+	}];
 }
 
 //The event handling method

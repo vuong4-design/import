@@ -128,6 +128,7 @@
 					// Initialize Product class.
 					NSString *prodName = (NSString *)prod[@"prod_name"];
 					NSString *prodID = (NSString *)prod[@"prod_id"];
+					NSString *inventoryID = prod[@"inventory_id"] ?: prod[@"inventoryID"];
 					NSNumber *price = (NSNumber *)prod[@"price"];
 					NSNumber *quantity = (NSNumber *)prod[@"quantity"];
 
@@ -135,6 +136,7 @@
 						[Product alloc]
 							initWithProdName: prodName
 											  prodID: prodID
+									 inventoryID: inventoryID
 												 price: price
 											quantity: quantity
 					];
