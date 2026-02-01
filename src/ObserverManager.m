@@ -79,6 +79,7 @@ static NSString *const kObserverPriorityKey = @"priority";
 }
 
 - (void)routeUpdatedTransactions:(NSArray *)transactions queue:(id)queue {
+	[self purgeReleasedObservers];
 	BOOL exportModeEnabled = [ExportManager shared].exportMode;
 	NSArray<ObserverEntry *> *entries = [self sortedEntries];
 	for (ObserverEntry *entry in entries) {
@@ -92,6 +93,16 @@ static NSString *const kObserverPriorityKey = @"priority";
 		if ([observer respondsToSelector:@selector(paymentQueue:updatedTransactions:)]) {
 			[observer paymentQueue:queue updatedTransactions:transactions];
 		}
+	}
+}
+
+- (void)purgeReleasedObservers {
+	NSIndexSet *indexesToRemove = [self.observerEntries indexesOfObjectsPassingTest:^BOOL(ObserverEntry *entry, NSUInteger idx, BOOL *stop) {
+		return entry.observer == nil;
+	}];
+	if (indexesToRemove.count > 0) {
+		[self.observerEntries removeObjectsAtIndexes:indexesToRemove];
+		NSLog(@"DEBUG* removed released StoreKit observers");
 	}
 }
 
@@ -121,6 +132,11 @@ static NSString *const kObserverPriorityKey = @"priority";
 
 - (id)routingObserver {
 	return _routingObserver;
+}
+
+- (void)clearObservers {
+	[self.observerEntries removeAllObjects];
+	NSLog(@"DEBUG* cleared tracked StoreKit observers");
 }
 
 @end

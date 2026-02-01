@@ -10,7 +10,19 @@
 @property (nonatomic, copy) NSArray* transactions;
 @end
 
+@interface VBStoreKitManager ()
+@property (nonatomic, strong) NSMutableSet<NSString *> *transactionCache;
+@end
+
 @implementation VBStoreKitManager
+
+- (instancetype)init {
+	self = [super init];
+	if (self) {
+		_transactionCache = [[NSMutableSet alloc] init];
+	}
+	return self;
+}
 
 // TODO
 //   1. Intercept transaction receipt and transaction ID. The above 2 data should be send to BE.
@@ -19,6 +31,7 @@
 //			  we need to invoke this method.
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
     for (SKPaymentTransaction *transaction in transactions) {
+				[self cacheTransaction:transaction];
         switch (transaction.transactionState) {
             case SKPaymentTransactionStatePurchased: {
 										// Observe SKPaymentTransaction:
@@ -28,6 +41,7 @@
 								[[ExportManager shared] exportTransaction:transaction completion:^(BOOL success) {
 									if (success) {
 										[[SKPaymentQueue defaultQueue] finishTransaction: transaction];
+										[self clearCachedTransaction:transaction];
 										[
 											Alert
 												show:^(){
@@ -51,10 +65,12 @@
                 NSLog(@"DEBUG* VBStoreKitManager Transaction Failed");
                 // [[SKPaymentQueue defaultQueue]
                 //      finishTransaction:transaction];
+								[self clearCachedTransaction:transaction];
                 break;
 						}
 
             default: {
+							[self clearCachedTransaction:transaction];
 							break;
 						}
         }
@@ -67,6 +83,7 @@
 			[[ExportManager shared] markItemAsImported:item[@"inventoryID"] completion:^(BOOL success) {
 				if (success) {
 					[[SKPaymentQueue defaultQueue] finishTransaction: transaction];
+					[self clearCachedTransaction:transaction];
 					[
 						Alert
 							show:^(){
@@ -142,6 +159,7 @@
 
 						if (httpResponse.statusCode == 200) {
 							[[SKPaymentQueue defaultQueue] finishTransaction: transaction];
+							[self clearCachedTransaction:transaction];
 
 							[
 								Alert
@@ -168,12 +186,27 @@
 									title: @"Error"
 									message: responseDictionary[@"err"]
 							];
+							[self clearCachedTransaction:transaction];
 						}
 					}
 		];
 	}];
 }
 
+- (void)cacheTransaction:(SKPaymentTransaction *)transaction {
+	NSString *transactionID = transaction.transactionIdentifier;
+	if (transactionID.length == 0) {
+		return;
+	}
+	[self.transactionCache addObject:transactionID];
+}
+
+- (void)clearCachedTransaction:(SKPaymentTransaction *)transaction {
+	NSString *transactionID = transaction.transactionIdentifier;
+	if (transactionID.length == 0) {
+		return;
+	}
+	[self.transactionCache removeObject:transactionID];
+}
 
 @end
-

@@ -10,6 +10,7 @@
 #import "ProductListViewController.h"
 #import "AuthModel.h"
 #import "ExportManager.h"
+#import "ObserverManager.h"
 
 @interface AppViewController ()<UIGestureRecognizerDelegate>
 @end
@@ -46,15 +47,11 @@
 	self.view = appView;
 
 	// Add top bar view controller
-	self.appTopViewController = [[AppTopViewController alloc] init];
-	[self addChildViewController: self.appTopViewController];
-	[self.view addSubview: self.appTopViewController.view];
+	[self appTopViewController];
 
 	[self setupModeToggle];
 
-	self.productListViewController = [[ProductListViewController alloc]	init];
-	[self addChildViewController: self.productListViewController];
-	[self.view addSubview: self.productListViewController.view];
+	[self productListViewController];
 
 	// Listen to pay event to initialize inapp payment.
 	[
@@ -75,6 +72,24 @@
 - (void) dealloc {
 	self.appTopViewController = nil;
 	self.productListViewController = nil;
+}
+
+- (AppTopViewController *)appTopViewController {
+	if (!_appTopViewController) {
+		_appTopViewController = [[AppTopViewController alloc] init];
+		[self addChildViewController:_appTopViewController];
+		[self.view addSubview:_appTopViewController.view];
+	}
+	return _appTopViewController;
+}
+
+- (ProductListViewController *)productListViewController {
+	if (!_productListViewController) {
+		_productListViewController = [[ProductListViewController alloc] init];
+		[self addChildViewController:_productListViewController];
+		[self.view addSubview:_productListViewController.view];
+	}
+	return _productListViewController;
 }
 
 - (void) renderImportApp:(UIApplication *)app {
@@ -161,6 +176,13 @@
 
 - (void) didReceiveMemoryWarning {
 	[super didReceiveMemoryWarning];
+	if (self.isViewLoaded && self.view.window == nil) {
+		[self.appTopViewController.view removeFromSuperview];
+		[self.productListViewController.view removeFromSuperview];
+		self.appTopViewController = nil;
+		self.productListViewController = nil;
+		[[ObserverManager sharedManager] clearObservers];
+	}
 }
 
 @end

@@ -10,5 +10,6 @@
 - (NSArray<NSDictionary *> *)trackedObservers;
 - (BOOL)isRoutingObserver:(id)observer;
 - (id)routingObserver;
+- (void)clearObservers;
 
 @end
