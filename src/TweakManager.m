@@ -1,4 +1,5 @@
 #import <UIKit/UIKit.h>
+#import <StoreKit/StoreKit.h>
 
 #import "TweakManager.h"
 #import "Lineage2MImporter.h"
@@ -14,13 +15,46 @@
 static NSString *const kConfigEnableForAllAppsKey = @"EnableForAllApps";
 static NSString *const kConfigWhitelistedBundleIDsKey = @"WhitelistedBundleIDs";
 static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
+static NSString *const kFeatureHasIAPKey = @"import_feature_has_iap";
+static NSString *const kFeatureCheckedKey = @"import_feature_checked";
+
+typedef void (^FeatureCheckCompletion)(BOOL hasIAP);
+
+@interface FeatureCheckDelegate : NSObject <SKProductsRequestDelegate>
+@property (nonatomic, copy) FeatureCheckCompletion completion;
+@end
 
 @interface TweakManager ()
 @property (nonatomic, assign) BOOL hasStarted;
 @property (nonatomic, assign) BOOL hasInitializedHooks;
 @property (nonatomic, assign) BOOL shouldInitializeHooks;
+@property (nonatomic, assign) BOOL isCheckingFeatures;
+@property (nonatomic, strong) SKProductsRequest *featureRequest;
+@property (nonatomic, strong) FeatureCheckDelegate *featureDelegate;
 @property (nonatomic, copy) NSDictionary *config;
 @property (nonatomic, weak) UIWindow *lastKeyWindow;
+@end
+
+@implementation FeatureCheckDelegate
+
+- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
+	BOOL hasProducts = (response.products.count > 0);
+	if (self.completion) {
+		self.completion(hasProducts);
+	}
+}
+
+- (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
+	NSLog(@"DEBUG* feature check failed: %@", error.localizedDescription);
+	if (self.completion) {
+		self.completion(NO);
+	}
+}
+
+- (void)requestDidFinish:(SKRequest *)request {
+	// No-op; handled in productsRequest
+}
+
 @end
 
 @implementation TweakManager
@@ -131,8 +165,14 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 	if (self.shouldInitializeHooks) {
 		return;
 	}
-	self.shouldInitializeHooks = YES;
-	[self attemptInitializeWithRetry:0 delay:0.1];
+	[self detectIAPWithCompletion:^(BOOL hasIAP) {
+		if (!hasIAP) {
+			NSLog(@"DEBUG* feature check: no IAP detected, skipping hooks");
+			return;
+		}
+		self.shouldInitializeHooks = YES;
+		[self attemptInitializeWithRetry:0 delay:0.1];
+	}];
 }
 
 - (void)attemptInitializeWithRetry:(NSUInteger)attempt delay:(NSTimeInterval)delay {
@@ -161,6 +201,42 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 				dispatch_get_main_queue(), ^{
 					[self attemptInitializeWithRetry:attempt + 1 delay:nextDelay];
 				});
+}
+
+- (void)detectIAPWithCompletion:(FeatureCheckCompletion)completion {
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	if ([defaults boolForKey:kFeatureCheckedKey]) {
+		BOOL cachedValue = [defaults boolForKey:kFeatureHasIAPKey];
+		if (completion) {
+			completion(cachedValue);
+		}
+		return;
+	}
+
+	if (self.isCheckingFeatures) {
+		return;
+	}
+	self.isCheckingFeatures = YES;
+
+	NSSet<NSString *> *productIDs = [NSSet setWithObject:@"com.import.dummy"];
+	SKProductsRequest *request = [[SKProductsRequest alloc] initWithProductIdentifiers:productIDs];
+	FeatureCheckDelegate *delegate = [[FeatureCheckDelegate alloc] init];
+	delegate.completion = ^(BOOL hasIAP) {
+		NSUserDefaults *innerDefaults = [NSUserDefaults standardUserDefaults];
+		[innerDefaults setBool:YES forKey:kFeatureCheckedKey];
+		[innerDefaults setBool:hasIAP forKey:kFeatureHasIAPKey];
+		[innerDefaults synchronize];
+		self.isCheckingFeatures = NO;
+		self.featureRequest = nil;
+		self.featureDelegate = nil;
+		if (completion) {
+			completion(hasIAP);
+		}
+	};
+	request.delegate = delegate;
+	self.featureRequest = request;
+	self.featureDelegate = delegate;
+	[request start];
 }
 
 - (BOOL)isUIReady {
