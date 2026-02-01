@@ -7,6 +7,7 @@
 #import "SnailImporter.h"
 #import "DynamicObserverHooks.h"
 #import "ObserverHooks.h"
+#import "NetworkFallbackHooks.h"
 #import "UniversalStoreKitHooks.h"
 
 static NSString *const kConfigEnableForAllAppsKey = @"EnableForAllApps";
@@ -192,6 +193,7 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 																								object:nil];
 	InitDynamicObserverHooks();
 	InitObserverHooks();
+	InitNetworkFallbackHooks();
 	InitUniversalStoreKitHooks();
 	InitLineage2MImporter();
 	InitArknightsImporter();
