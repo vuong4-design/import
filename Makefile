@@ -24,6 +24,7 @@ ImportPrefs_PRIVATE_FRAMEWORKS = Preferences
 ImportPrefs_INSTALL_PATH = /Library/PreferenceBundles
 ImportPrefs_RESOURCE_FILES = prefs/Resources/Root.plist
 ImportPrefs_CFLAGS = -fobjc-arc
+ImportPrefs_LDFLAGS += -F$(THEOS)/vendor/lib -F$(THEOS)/vendor/Frameworks
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 include $(THEOS_MAKE_PATH)/bundle.mk
