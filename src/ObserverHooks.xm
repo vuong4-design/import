@@ -16,7 +16,8 @@
 	}
 
 	NSInteger priority = 10;
-	if ([NSStringFromClass([observer class]) isEqualToString:@"VBStoreKitManager"]) {
+	Class vbClass = NSClassFromString(@"VBStoreKitManager");
+	if (vbClass && [observer isKindOfClass:vbClass]) {
 		priority = 0;
 	}
 

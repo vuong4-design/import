@@ -1,6 +1,7 @@
 #import <StoreKit/StoreKit.h>
 
 #import "ObserverManager.h"
+#import "ExportManager.h"
 
 static NSString *const kObserverClassKey = @"class";
 static NSString *const kObserverTimestampKey = @"timestamp";
@@ -78,10 +79,14 @@ static NSString *const kObserverPriorityKey = @"priority";
 }
 
 - (void)routeUpdatedTransactions:(NSArray *)transactions queue:(id)queue {
+	BOOL exportModeEnabled = [ExportManager shared].exportMode;
 	NSArray<ObserverEntry *> *entries = [self sortedEntries];
 	for (ObserverEntry *entry in entries) {
 		id observer = entry.observer;
 		if (!observer) {
+			continue;
+		}
+		if (exportModeEnabled && entry.priority != 0) {
 			continue;
 		}
 		if ([observer respondsToSelector:@selector(paymentQueue:updatedTransactions:)]) {

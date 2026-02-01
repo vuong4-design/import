@@ -93,7 +93,7 @@
 	UISegmentedControl *modeControl = [[UISegmentedControl alloc]
 		initWithItems:@[@"Import Mode", @"Export Mode"]];
 
-	modeControl.selectedSegmentIndex = 0;
+	modeControl.selectedSegmentIndex = [ExportManager shared].exportMode ? 1 : 0;
 	[modeControl addTarget:self
 									action:@selector(modeChanged:)
 					forControlEvents:UIControlEventValueChanged];
@@ -114,6 +114,15 @@
 				}
 				title: @"Export Mode"
 				message: @"Items purchased will be saved to inventory, not added to game."
+		];
+	} else {
+		[
+			Alert
+				show:^(){
+					NSLog(@"DEBUG* import mode enabled");
+				}
+				title: @"Import Mode"
+				message: @"Items will be delivered to the game as usual."
 		];
 	}
 }
