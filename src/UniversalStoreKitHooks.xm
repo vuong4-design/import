@@ -1,5 +1,7 @@
 #import <Foundation/Foundation.h>
 
+#import "UniversalStoreKitHooks.h"
+
 %group UniversalStoreKitHooks
 
 %end

@@ -5,8 +5,7 @@
 #import "ArknightsImporter.h"
 #import "LineageMLiveImporter.h"
 #import "SnailImporter.h"
-
-extern "C" void InitUniversalStoreKitHooks();
+#import "UniversalStoreKitHooks.h"
 
 static NSString *const kConfigEnableForAllAppsKey = @"EnableForAllApps";
 static NSString *const kConfigWhitelistedBundleIDsKey = @"WhitelistedBundleIDs";

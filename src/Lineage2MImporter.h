@@ -1,1 +1,9 @@
-extern "C" void InitLineage2MImporter();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void InitLineage2MImporter(void);
+
+#ifdef __cplusplus
+}
+#endif
