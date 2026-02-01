@@ -10,6 +10,7 @@ import_FRAMEWORKS = StoreKit UIKit
 import_FILES = $(wildcard ./src/*.xm) $\
 	$(wildcard ./src/*.m) $\
 	$(wildcard ./src/**/*.m) $\
+	$(wildcard ./SharedLibraries/*.m) $\
 	$(wildcard ../SharedLibraries/*.m) $\
 	Tweak.xm
 import_CFLAGS = -fobjc-arc

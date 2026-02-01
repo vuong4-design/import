@@ -1,0 +1,15 @@
+#import "Foundation/Foundation.h"
+
+@interface Product : NSObject
+
+@property (nonatomic, copy) NSString *prodName;
+@property (nonatomic, copy) NSString *prodID;
+@property (nonatomic, strong) NSNumber *price;
+@property (nonatomic, strong) NSNumber *quantity;
+
+- (instancetype)initWithProdName:(NSString *)prodName
+                          prodID:(NSString *)prodID
+                           price:(NSNumber *)price
+                        quantity:(NSNumber *)quantity;
+
+@end
