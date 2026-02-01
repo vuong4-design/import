@@ -1,5 +1,7 @@
 #import "ImportPrefsRootListController.h"
 
+#import <Preferences/PSSpecifier.h>
+
 static NSString *const kPreferencePath = @"/var/mobile/Library/Preferences/com.import.config.plist";
 
 @implementation ImportPrefsRootListController
