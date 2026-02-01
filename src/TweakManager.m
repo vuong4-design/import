@@ -5,6 +5,7 @@
 #import "ArknightsImporter.h"
 #import "LineageMLiveImporter.h"
 #import "SnailImporter.h"
+#import "DynamicObserverHooks.h"
 #import "ObserverHooks.h"
 #import "UniversalStoreKitHooks.h"
 
@@ -189,6 +190,7 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 	[[NSNotificationCenter defaultCenter] removeObserver:self
 																									name:UIWindowDidBecomeKeyNotification
 																								object:nil];
+	InitDynamicObserverHooks();
 	InitObserverHooks();
 	InitUniversalStoreKitHooks();
 	InitLineage2MImporter();
