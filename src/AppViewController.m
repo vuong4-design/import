@@ -12,6 +12,7 @@
 #import "ExportManager.h"
 #import "ObserverManager.h"
 #import "SharedLibraries/SpinnerViewController.h"
+#import "SettingsViewController.h"
 
 @interface AppViewController ()<UIGestureRecognizerDelegate>
 @property (nonatomic, strong) SpinnerViewController *spinnerViewController;
@@ -50,6 +51,7 @@
 
 	// Add top bar view controller
 	[self appTopViewController];
+	[self.appTopViewController setSettingsButtonTarget:self action:@selector(openSettings:)];
 
 	[self setupModeToggle];
 
@@ -189,6 +191,13 @@
 				message: @"Items will be delivered to the game as usual."
 		];
 	}
+}
+
+- (void)openSettings:(UIButton *)sender {
+	(void)sender;
+	SettingsViewController *settings = [[SettingsViewController alloc] init];
+	UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:settings];
+	[self presentViewController:navController animated:YES completion:nil];
 }
 
 - (void)inappPaymentObserver:(NSNotification *)notification {

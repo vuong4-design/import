@@ -15,6 +15,7 @@
 static NSString *const kConfigEnableForAllAppsKey = @"EnableForAllApps";
 static NSString *const kConfigWhitelistedBundleIDsKey = @"WhitelistedBundleIDs";
 static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
+static NSString *const kConfigEnableUniversalHooksKey = @"EnableUniversalHooks";
 static NSString *const kFeatureHasIAPKey = @"import_feature_has_iap";
 static NSString *const kFeatureCheckedKey = @"import_feature_checked";
 
@@ -93,6 +94,7 @@ typedef void (^FeatureCheckCompletion)(BOOL hasIAP);
 	NSDictionary *defaults = @{
 		kConfigEnableForAllAppsKey: @YES,
 		kConfigWhitelistedBundleIDsKey: @[],
+		kConfigEnableUniversalHooksKey: @YES,
 	};
 
 	NSString *preferencePath = @"/var/mobile/Library/Preferences/com.import.config.plist";
@@ -288,7 +290,12 @@ typedef void (^FeatureCheckCompletion)(BOOL hasIAP);
 	InitDynamicObserverHooks();
 	InitObserverHooks();
 	InitNetworkFallbackHooks();
-	InitUniversalStoreKitHooks();
+	NSNumber *enableUniversal = self.config[kConfigEnableUniversalHooksKey];
+	if (![enableUniversal respondsToSelector:@selector(boolValue)] || enableUniversal.boolValue) {
+		InitUniversalStoreKitHooks();
+	} else {
+		NSLog(@"DEBUG* universal hooks disabled by config");
+	}
 	InitLineage2MImporter();
 	InitArknightsImporter();
 	InitLineageMLiveImporter();

@@ -20,5 +20,6 @@ typedef void (^InventoryCheckCompletion)(BOOL exists, NSDictionary *item);
 									 productID:(NSString *)productID
 								transactionID:(NSString *)transactionID
 											 status:(NSString *)status;
+- (void)clearCachedData;
 
 @end

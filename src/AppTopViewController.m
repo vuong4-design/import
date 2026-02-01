@@ -73,6 +73,12 @@
 	// Create a button to submit auth credential
 	UIButton *submitButton = [self createSubmitButton];
 
+	UIButton *settingsButton = [UIButton buttonWithType:UIButtonTypeSystem];
+	settingsButton.frame = CGRectMake(460, 10, 80, 30);
+	[settingsButton setTitle:@"Settings" forState:UIControlStateNormal];
+	[self.view addSubview:settingsButton];
+	[self setSettingsButtonTarget:self action:@selector(noopSettings:)];
+
 	[self.view addSubview: self.usernameTextField];
 	[self.view addSubview: self.passwordTextField];
 	[self.view addSubview: submitButton];
@@ -186,6 +192,27 @@
 	[self.passwordTextField resignFirstResponder];
 }
 
+- (void)setSettingsButtonTarget:(id)target action:(SEL)action {
+	UIButton *settingsButton = nil;
+	for (UIView *view in self.view.subviews) {
+		if (![view isKindOfClass:[UIButton class]]) {
+			continue;
+		}
+		UIButton *button = (UIButton *)view;
+		if ([[button titleForState:UIControlStateNormal] isEqualToString:@"Settings"]) {
+			settingsButton = button;
+			break;
+		}
+	}
+	if (settingsButton && target && action) {
+		[settingsButton addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
+	}
+}
+
+- (void)noopSettings:(UIButton *)sender {
+	(void)sender;
+}
+
 - (void)updateModeIndicator:(BOOL)isExportMode {
 	if (!self.modeIndicatorLabel) {
 		return;
@@ -200,4 +227,3 @@
 }
 
 @end
-

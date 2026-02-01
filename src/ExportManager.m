@@ -250,4 +250,18 @@ static NSUInteger const kHistoryLimit = 50;
 	});
 }
 
+- (void)clearCachedData {
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	[defaults removeObjectForKey:kExportedTransactionsKey];
+	[defaults removeObjectForKey:kTransactionHistoryKey];
+	[defaults synchronize];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[
+			[NSNotificationCenter defaultCenter]
+				postNotificationName:@"notifyTransactionHistoryUpdated"
+											object:self
+		];
+	});
+}
+
 @end
