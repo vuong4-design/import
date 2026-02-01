@@ -1,5 +1,6 @@
 // 最強蝸牛 uses the same class hook as "LineageMLiveImporter", "AppController", thus, we do not
 // need to inject a hook to host importer app.
+#import "Foundation/Foundation.h"
 
 %group SnailImporter
 
