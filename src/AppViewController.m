@@ -11,8 +11,10 @@
 #import "AuthModel.h"
 #import "ExportManager.h"
 #import "ObserverManager.h"
+#import "SharedLibraries/SpinnerViewController.h"
 
 @interface AppViewController ()<UIGestureRecognizerDelegate>
+@property (nonatomic, strong) SpinnerViewController *spinnerViewController;
 @end
 
 @implementation AppViewController
@@ -67,6 +69,14 @@
 			addObserver:self
 				 selector:@selector(importItemObserver:)
 						 name:@"notifyImportItem"
+					 object:nil
+	];
+
+	[
+		[NSNotificationCenter defaultCenter]
+			addObserver:self
+				 selector:@selector(transactionProcessingObserver:)
+						 name:@"notifyTransactionProcessing"
 					 object:nil
 	];
 
@@ -219,7 +229,9 @@
 		return;
 	}
 
+	[self showLoadingIndicator];
 	[[ExportManager shared] markItemAsImported:inventoryID completion:^(BOOL success) {
+		[self hideLoadingIndicator];
 		if (success) {
 			[
 				Alert
@@ -245,6 +257,36 @@
 			];
 		}
 	}];
+}
+
+- (void)transactionProcessingObserver:(NSNotification *)notification {
+	NSString *status = notification.userInfo[@"status"];
+	if ([status isEqualToString:@"processing"]) {
+		[self showLoadingIndicator];
+		return;
+	}
+	if ([status isEqualToString:@"done"]) {
+		[self hideLoadingIndicator];
+	}
+}
+
+- (void)showLoadingIndicator {
+	if (self.spinnerViewController) {
+		return;
+	}
+	UIWindow *window = ([UIApplication sharedApplication].delegate).window;
+	SpinnerViewController *spinner = [[SpinnerViewController alloc] init];
+	spinner.view.frame = window.frame;
+	[self.view addSubview:spinner.view];
+	self.spinnerViewController = spinner;
+}
+
+- (void)hideLoadingIndicator {
+	if (!self.spinnerViewController) {
+		return;
+	}
+	[self.spinnerViewController hide];
+	self.spinnerViewController = nil;
 }
 
 //The event handling method

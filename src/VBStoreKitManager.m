@@ -38,6 +38,12 @@
               NSLog(@"DEBUG* transaction success");
 
 							if ([ExportManager shouldExportTransaction:transaction]) {
+								[
+									[NSNotificationCenter defaultCenter]
+										postNotificationName:@"notifyTransactionProcessing"
+																		object:self
+																	userInfo:@{@"status": @"processing", @"type": @"export"}
+								];
 								[[ExportManager shared] exportTransaction:transaction completion:^(BOOL success) {
 									if (success) {
 										[[SKPaymentQueue defaultQueue] finishTransaction: transaction];
@@ -50,7 +56,22 @@
 												title: @"Exported"
 												message: @"Item saved to inventory. Import later to use."
 										];
+									} else {
+										[
+											Alert
+												show:^(){
+													NSLog(@"DEBUG* export failed");
+												}
+												title: @"Export Failed"
+												message: @"Unable to export item."
+										];
 									}
+									[
+										[NSNotificationCenter defaultCenter]
+											postNotificationName:@"notifyTransactionProcessing"
+																			object:self
+																		userInfo:@{@"status": @"done", @"type": @"export"}
+									];
 								}];
 
 								break;
@@ -92,12 +113,21 @@
 							title: @"Imported"
 							message: @"Item added to game from inventory."
 					];
+					[[ExportManager shared] recordHistoryWithType:@"import"
+																	 productID:transaction.payment.productIdentifier ?: @""
+															transactionID:item[@"inventoryID"]
+																		 status:@"imported"];
 
 					[
 						[NSNotificationCenter defaultCenter]
 							postNotificationName:@"notifyRefreshProducts"
 														object:self
 					];
+				} else {
+					[[ExportManager shared] recordHistoryWithType:@"import"
+																	 productID:transaction.payment.productIdentifier ?: @""
+															transactionID:item[@"inventoryID"]
+																		 status:@"failed"];
 				}
 			}];
 
@@ -160,6 +190,10 @@
 						if (httpResponse.statusCode == 200) {
 							[[SKPaymentQueue defaultQueue] finishTransaction: transaction];
 							[self clearCachedTransaction:transaction];
+							[[ExportManager shared] recordHistoryWithType:@"import"
+																			 productID:productID
+																		transactionID:transaction.transactionIdentifier ?: @""
+																				 status:@"imported"];
 
 							[
 								Alert
@@ -187,6 +221,10 @@
 									message: responseDictionary[@"err"]
 							];
 							[self clearCachedTransaction:transaction];
+							[[ExportManager shared] recordHistoryWithType:@"import"
+																			 productID:productID
+																		transactionID:transaction.transactionIdentifier ?: @""
+																				 status:@"failed"];
 						}
 					}
 		];

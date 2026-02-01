@@ -10,7 +10,9 @@
 
 static NSString *const kExportedTransactionsKey = @"import_exported_transactions";
 static NSString *const kExportRateLimitKey = @"import_export_rate_limit";
+static NSString *const kTransactionHistoryKey = @"import_transaction_history";
 static NSTimeInterval const kExportRateLimitWindow = 2.0;
+static NSUInteger const kHistoryLimit = 50;
 
 + (instancetype)shared {
 	static ExportManager *sharedInstance = nil;
@@ -73,6 +75,13 @@ static NSTimeInterval const kExportRateLimitWindow = 2.0;
 
 		void (^exportBlock)(NSInteger code, id data) = ^(NSInteger code, id data) {
 			(void)data;
+			NSString *productID = transaction.payment.productIdentifier ?: @"";
+			NSString *transactionID = transaction.transactionIdentifier ?: @"";
+			NSString *status = (code == 200) ? @"exported" : @"failed";
+			[self recordHistoryWithType:@"export"
+											 productID:productID
+										transactionID:transactionID
+												 status:status];
 			[self recordExportedTransaction:transaction success:(code == 200)];
 			if (completion) {
 				completion(code == 200);
@@ -97,13 +106,20 @@ static NSTimeInterval const kExportRateLimitWindow = 2.0;
 				 transactionID:transaction.transactionIdentifier
 							 receipt:receiptString
 				 transactionTime:transaction.transactionDate
-				completedHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-					(void)data;
-					BOOL success = (error == nil && [(NSHTTPURLResponse *)response statusCode] == 200);
-					[self recordExportedTransaction:transaction success:success];
-					if (completion) {
-						completion(success);
-					}
+					completedHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+						(void)data;
+						BOOL success = (error == nil && [(NSHTTPURLResponse *)response statusCode] == 200);
+						NSString *productID = transaction.payment.productIdentifier ?: @"";
+						NSString *transactionID = transaction.transactionIdentifier ?: @"";
+						NSString *status = success ? @"exported" : @"failed";
+						[self recordHistoryWithType:@"export"
+													 productID:productID
+												transactionID:transactionID
+														 status:status];
+						[self recordExportedTransaction:transaction success:success];
+						if (completion) {
+							completion(success);
+						}
 				}
 	];
 }
@@ -176,6 +192,11 @@ static NSTimeInterval const kExportRateLimitWindow = 2.0;
 
 	if ([httpUtil respondsToSelector:markSelector]) {
 		void (^markBlock)(BOOL success) = ^(BOOL success) {
+			NSString *status = success ? @"imported" : @"failed";
+			[self recordHistoryWithType:@"import"
+											 productID:@""
+										transactionID:inventoryID ?: @""
+												 status:status];
 			if (completion) {
 				completion(success);
 			}
@@ -189,6 +210,44 @@ static NSTimeInterval const kExportRateLimitWindow = 2.0;
 	if (completion) {
 		completion(NO);
 	}
+}
+
+- (NSArray<NSDictionary *> *)transactionHistory {
+	NSArray *history = [[NSUserDefaults standardUserDefaults] arrayForKey:kTransactionHistoryKey];
+	if (![history isKindOfClass:[NSArray class]]) {
+		return @[];
+	}
+	return history;
+}
+
+- (void)recordHistoryWithType:(NSString *)type
+									 productID:(NSString *)productID
+								transactionID:(NSString *)transactionID
+											 status:(NSString *)status {
+	NSMutableDictionary *entry = [[NSMutableDictionary alloc] init];
+	entry[@"type"] = type ?: @"";
+	entry[@"productID"] = productID ?: @"";
+	entry[@"transactionID"] = transactionID ?: @"";
+	entry[@"status"] = status ?: @"";
+	entry[@"timestamp"] = @([NSDate date].timeIntervalSince1970);
+
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	NSArray *existing = [defaults arrayForKey:kTransactionHistoryKey] ?: @[];
+	NSMutableArray *updated = [existing mutableCopy];
+	[updated insertObject:entry atIndex:0];
+	if (updated.count > kHistoryLimit) {
+		[updated removeObjectsInRange:NSMakeRange(kHistoryLimit, updated.count - kHistoryLimit)];
+	}
+	[defaults setObject:updated forKey:kTransactionHistoryKey];
+	[defaults synchronize];
+
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[
+			[NSNotificationCenter defaultCenter]
+				postNotificationName:@"notifyTransactionHistoryUpdated"
+											object:self
+		];
+	});
 }
 
 @end
