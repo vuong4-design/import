@@ -4,8 +4,6 @@
 #import "DynamicObserverHooks.h"
 
 static NSMapTable<Class, NSValue *> *gOriginalImps;
-static const SEL kUpdatedTransactionsSelector = @selector(paymentQueue:updatedTransactions:);
-
 typedef void (*PaymentQueueUpdatedTransactionsIMP)(id, SEL, SKPaymentQueue *, NSArray *);
 
 static void DynamicPaymentQueueUpdatedTransactions(id self, SEL _cmd, SKPaymentQueue *queue, NSArray *transactions) {
@@ -21,7 +19,8 @@ static void DynamicPaymentQueueUpdatedTransactions(id self, SEL _cmd, SKPaymentQ
 }
 
 static BOOL SwizzleObserverClass(Class cls) {
-	Method method = class_getInstanceMethod(cls, kUpdatedTransactionsSelector);
+	SEL updatedSelector = @selector(paymentQueue:updatedTransactions:);
+	Method method = class_getInstanceMethod(cls, updatedSelector);
 	if (!method) {
 		return NO;
 	}
