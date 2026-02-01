@@ -4,5 +4,6 @@
 
 + (instancetype)sharedManager;
 - (void)start;
+- (void)requestInitializeHooks;
 
 @end

@@ -6,6 +6,7 @@
 #import "LineageMLiveImporter.h"
 #import "SnailImporter.h"
 #import "DynamicObserverHooks.h"
+#import "LazyInitHooks.h"
 #import "ObserverHooks.h"
 #import "NetworkFallbackHooks.h"
 #import "UniversalStoreKitHooks.h"
@@ -17,6 +18,7 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 @interface TweakManager ()
 @property (nonatomic, assign) BOOL hasStarted;
 @property (nonatomic, assign) BOOL hasInitializedHooks;
+@property (nonatomic, assign) BOOL shouldInitializeHooks;
 @property (nonatomic, copy) NSDictionary *config;
 @property (nonatomic, weak) UIWindow *lastKeyWindow;
 @end
@@ -50,7 +52,7 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 										 selector:@selector(windowDidBecomeKey:)
 										 name:UIWindowDidBecomeKeyNotification
 									 object:nil];
-	[self attemptInitializeWithRetry:0 delay:0.1];
+	InitLazyInitHooks();
 }
 
 - (NSDictionary *)loadConfiguration {
@@ -117,11 +119,27 @@ static NSString *const kConfigLastLoadedPathKey = @"_LoadedFrom";
 	if ([window isKindOfClass:[UIWindow class]]) {
 		self.lastKeyWindow = window;
 	}
+	if (self.shouldInitializeHooks) {
+		[self attemptInitializeWithRetry:0 delay:0.1];
+	}
+}
+
+- (void)requestInitializeHooks {
+	if (self.hasInitializedHooks) {
+		return;
+	}
+	if (self.shouldInitializeHooks) {
+		return;
+	}
+	self.shouldInitializeHooks = YES;
 	[self attemptInitializeWithRetry:0 delay:0.1];
 }
 
 - (void)attemptInitializeWithRetry:(NSUInteger)attempt delay:(NSTimeInterval)delay {
 	if (self.hasInitializedHooks) {
+		return;
+	}
+	if (!self.shouldInitializeHooks) {
 		return;
 	}
 
