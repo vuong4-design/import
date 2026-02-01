@@ -9,6 +9,7 @@
 #import "AppTopViewController.h"
 #import "ProductListViewController.h"
 #import "AuthModel.h"
+#import "ExportManager.h"
 
 @interface AppViewController ()<UIGestureRecognizerDelegate>
 @end
@@ -49,6 +50,8 @@
 	[self addChildViewController: self.appTopViewController];
 	[self.view addSubview: self.appTopViewController.view];
 
+	[self setupModeToggle];
+
 	self.productListViewController = [[ProductListViewController alloc]	init];
 	[self addChildViewController: self.productListViewController];
 	[self.view addSubview: self.productListViewController.view];
@@ -84,6 +87,35 @@
 	window.rootViewController = self;
 
 	[window addSubview:self.view];
+}
+
+- (void)setupModeToggle {
+	UISegmentedControl *modeControl = [[UISegmentedControl alloc]
+		initWithItems:@[@"Import Mode", @"Export Mode"]];
+
+	modeControl.selectedSegmentIndex = 0;
+	[modeControl addTarget:self
+									action:@selector(modeChanged:)
+					forControlEvents:UIControlEventValueChanged];
+
+	modeControl.frame = CGRectMake(10, 45, 240, 30);
+	[self.appTopViewController.view addSubview:modeControl];
+}
+
+- (void)modeChanged:(UISegmentedControl *)control {
+	BOOL isExportMode = (control.selectedSegmentIndex == 1);
+	[ExportManager shared].exportMode = isExportMode;
+
+	if (isExportMode) {
+		[
+			Alert
+				show:^(){
+					NSLog(@"DEBUG* export mode enabled");
+				}
+				title: @"Export Mode"
+				message: @"Items purchased will be saved to inventory, not added to game."
+		];
+	}
 }
 
 - (void)inappPaymentObserver:(NSNotification *)notification {
