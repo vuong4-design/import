@@ -56,7 +56,7 @@
 			}
 		};
 
-		void (*msgSend)(id, SEL, NSDictionary *, ExportCompletion) = (void (*)(id, SEL, NSDictionary *, ExportCompletion))objc_msgSend;
+		void (*msgSend)(id, SEL, NSDictionary *, void (^)(NSInteger, id)) = (void (*)(id, SEL, NSDictionary *, void (^)(NSInteger, id)))objc_msgSend;
 		msgSend(httpUtil, exportSelector, params, exportBlock);
 		return;
 	}
