@@ -13,6 +13,7 @@ import_FILES = $(wildcard ./src/*.xm) $\
 	$(wildcard ./SharedLibraries/*.m) $\
 	$(wildcard ../SharedLibraries/*.m) $\
 	Tweak.xm
+import_RESOURCE_FILES = Config.plist
 import_CFLAGS = -fobjc-arc
 import_CFLAGS += -DAPI_HOST=@\"$(API_HOST)\"
 
