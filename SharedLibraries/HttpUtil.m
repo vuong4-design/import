@@ -1,7 +1,7 @@
 #import "HttpUtil.h"
 
 #ifndef API_HOST
-#define API_HOST ""
+#define API_HOST @""
 #endif
 
 static NSString *const kExportEndpointPath = @"/api/inventory/export";
@@ -53,7 +53,7 @@ completedHandler:(void (^)(NSData *data, NSURLResponse *response, NSError *error
 
 - (void)exportItemToInventory:(NSDictionary *)params
                    completion:(void (^)(NSInteger code, id data))completion {
-	NSString *host = @API_HOST;
+	NSString *host = API_HOST;
 	if (host.length == 0) {
 		NSLog(@"DEBUG* export endpoint missing API_HOST");
 		if (completion) {
