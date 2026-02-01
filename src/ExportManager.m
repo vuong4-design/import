@@ -2,6 +2,8 @@
 
 #import "SharedLibraries/HttpUtil.h"
 
+#import <objc/message.h>
+
 #import "ExportManager.h"
 
 @implementation ExportManager
@@ -54,7 +56,8 @@
 			}
 		};
 
-		[httpUtil performSelector:exportSelector withObject:params withObject:exportBlock];
+		void (*msgSend)(id, SEL, NSDictionary *, ExportCompletion) = (void (*)(id, SEL, NSDictionary *, ExportCompletion))objc_msgSend;
+		msgSend(httpUtil, exportSelector, params, exportBlock);
 		return;
 	}
 
@@ -91,7 +94,8 @@
 			}
 		};
 
-		[httpUtil performSelector:checkSelector withObject:productID withObject:checkBlock];
+		void (*msgSend)(id, SEL, NSString *, InventoryCheckCompletion) = (void (*)(id, SEL, NSString *, InventoryCheckCompletion))objc_msgSend;
+		msgSend(httpUtil, checkSelector, productID, checkBlock);
 		return;
 	}
 
@@ -111,7 +115,8 @@
 			}
 		};
 
-		[httpUtil performSelector:markSelector withObject:inventoryID withObject:markBlock];
+		void (*msgSend)(id, SEL, NSString *, ExportCompletion) = (void (*)(id, SEL, NSString *, ExportCompletion))objc_msgSend;
+		msgSend(httpUtil, markSelector, inventoryID, markBlock);
 		return;
 	}
 
