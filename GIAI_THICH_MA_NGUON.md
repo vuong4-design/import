@@ -92,3 +92,33 @@ Mã nguồn đã bổ sung cơ chế **Export/Import Mode** để tách việc l
 - **Export Mode:** khi nhận `SKPaymentTransactionStatePurchased`, giao dịch được gửi lên backend và kết thúc transaction để lưu vào kho; hiển thị thông báo export thành công. 【F:src/VBStoreKitManager.m†L17-L66】【F:src/ExportManager.m†L21-L74】
 - **Import Mode:** khi nhận giao dịch, hệ thống kiểm tra kho xem item đã export chưa; nếu có thì đánh dấu imported và kết thúc transaction; nếu không thì dùng luồng cũ (gửi receipt để thêm kho). 【F:src/VBStoreKitManager.m†L68-L184】【F:src/ExportManager.m†L76-L117】
 - **UI Toggle:** `AppViewController` thêm `UISegmentedControl` để bật/tắt Export Mode trong runtime. 【F:src/AppViewController.m†L60-L116】
+
+## 9. Hướng dẫn thao tác inventory trong UI
+Trong giao diện import:
+- **Danh sách sản phẩm/inventory** nằm trong `ProductListViewController` (dưới thanh đăng nhập). Mỗi dòng sản phẩm là một `ProductViewController` và có thể **tap** để kích hoạt mua/nhập. 【F:src/ProductListViewController.m†L14-L110】【F:src/ProductViewController.m†L31-L79】
+- **Luồng thao tác:**
+  1. Đăng nhập thành công.
+  2. Danh sách inventory sẽ tự load theo `bundleIdentifier`.
+  3. Tap vào sản phẩm để kích hoạt thanh toán/nhập (gửi `notifyInappPayment`). 【F:src/ProductListViewController.m†L70-L138】【F:src/ProductViewController.m†L31-L49】
+- **Refresh inventory:** Sau khi import/export hoàn tất, hệ thống sẽ bắn `notifyRefreshProducts` để cập nhật danh sách. 【F:src/VBStoreKitManager.m†L79-L160】
+
+## 10. Gợi ý dựng backend API cho inventory
+Để hỗ trợ đầy đủ luồng Export/Import, backend nên có các endpoint tối thiểu sau:
+
+1. **Đăng nhập**
+   - `POST /api/auth/login` → trả về JWT.
+   - Được gọi bởi `HttpUtil login`.
+2. **Lấy inventory**
+   - `GET /api/inventory?bundle_id=...`
+   - Trả về danh sách item (prod_name, prod_id, price, quantity).
+3. **Export giao dịch**
+   - `POST /api/inventory/export`
+   - Payload: `productID`, `transactionID`, `receipt`, `transactionDate`, `action=export`.
+4. **Kiểm tra item đã export chưa**
+   - `GET /api/inventory/check?product_id=...`
+   - Trả về `exists` + thông tin item (inventoryID).
+5. **Đánh dấu đã import**
+   - `POST /api/inventory/import`
+   - Payload: `inventoryID`.
+
+> Lưu ý: Các method này hiện được gọi qua `HttpUtil` (stub trong repo), khi nối backend thực tế cần triển khai tương ứng. 【F:SharedLibraries/HttpUtil.h†L1-L27】【F:src/ExportManager.m†L28-L125】
