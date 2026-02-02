@@ -26,6 +26,11 @@ jobs:
         run: |
           git clone --recursive https://github.com/theos/theos.git "$THEOS"
 
+          # Ensure vendor frameworks are available for linking private frameworks like Preferences
+          if [ ! -d "$THEOS/vendor/Frameworks/Preferences.framework" ]; then
+            git clone --depth 1 https://github.com/theos/vendor.git "$THEOS/vendor"
+          fi
+
           # Download iOS SDK
           curl -LO https://github.com/theos/sdks/archive/master.zip
           unzip master.zip
