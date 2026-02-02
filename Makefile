@@ -21,6 +21,7 @@ import_CFLAGS += -DAPI_HOST=@\"$(API_HOST)\"
 ImportPrefs_FILES = prefs/ImportPrefsRootListController.m
 ImportPrefs_FRAMEWORKS = UIKit
 ImportPrefs_PRIVATE_FRAMEWORKS = Preferences
+ImportPrefs_INFO_PLIST = prefs/Info.plist
 ImportPrefs_INSTALL_PATH = /Library/PreferenceBundles
 ImportPrefs_RESOURCE_FILES = prefs/Resources/Root.plist
 ImportPrefs_CFLAGS = -fobjc-arc
@@ -32,3 +33,6 @@ include $(THEOS_MAKE_PATH)/bundle.mk
 before-package::
 	@mkdir -p $(THEOS_STAGING_DIR)/Library/PreferenceLoader/Preferences
 	@cp prefs/ImportPrefs.plist $(THEOS_STAGING_DIR)/Library/PreferenceLoader/Preferences/ImportPrefs.plist
+	@cp prefs/entry.plist $(THEOS_STAGING_DIR)/Library/PreferenceLoader/Preferences/entry.plist
+	@mkdir -p $(THEOS_STAGING_DIR)/Library/PreferenceBundles/ImportPrefs.bundle
+	@cp prefs/Info.plist $(THEOS_STAGING_DIR)/Library/PreferenceBundles/ImportPrefs.bundle/Info.plist
