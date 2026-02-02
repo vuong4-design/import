@@ -51,7 +51,8 @@ jobs:
           if [ ! -f "$THEOS/vendor/Frameworks/Preferences.framework/Preferences" ]; then
             mkdir -p "$THEOS/vendor/Frameworks/Preferences.framework"
             printf '%s\n' 'void PSListController() {}' > "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
-            clang -dynamiclib -install_name /System/Library/PrivateFrameworks/Preferences.framework/Preferences \
+            clang -dynamiclib -isysroot "$THEOS/sdks/iPhoneOS14.5.sdk" -target arm64-apple-ios12.0 \
+              -install_name /System/Library/PrivateFrameworks/Preferences.framework/Preferences \
               -o "$THEOS/vendor/Frameworks/Preferences.framework/Preferences" \
               "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
             rm "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
