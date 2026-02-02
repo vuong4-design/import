@@ -48,24 +48,13 @@ jobs:
           popd
 
           # Create Preferences framework stub if missing
-          if [ ! -d "$THEOS/vendor/Frameworks/Preferences.framework" ]; then
+          if [ ! -f "$THEOS/vendor/Frameworks/Preferences.framework/Preferences" ]; then
             mkdir -p "$THEOS/vendor/Frameworks/Preferences.framework"
-            printf '%s\n' \
-              '--- !tapi-tbd-v3' \
-              'archs:           [ arm64, arm64e ]' \
-              "uuids:           [ 'arm64: 00000000-0000-0000-0000-000000000000' ]" \
-              'platform:        ios' \
-              'install-name:    /System/Library/PrivateFrameworks/Preferences.framework/Preferences' \
-              'exports:' \
-              '  - archs:       [ arm64, arm64e ]' \
-              '    symbols:     [ _OBJC_CLASS_$_PSListController, _OBJC_CLASS_$_PSSpecifier ]' \
-              > "$THEOS/vendor/Frameworks/Preferences.framework/Preferences.tbd"
-          fi
-          if [ ! -e "$THEOS/vendor/lib/libPreferences.dylib" ]; then
-            mkdir -p "$THEOS/vendor/lib"
-            printf '%s\n' 'void PSListController() {}' > "$THEOS/vendor/lib/stub.c"
-            clang -dynamiclib -o "$THEOS/vendor/lib/libPreferences.dylib" "$THEOS/vendor/lib/stub.c"
-            rm "$THEOS/vendor/lib/stub.c"
+            printf '%s\n' 'void PSListController() {}' > "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
+            clang -dynamiclib -install_name /System/Library/PrivateFrameworks/Preferences.framework/Preferences \
+              -o "$THEOS/vendor/Frameworks/Preferences.framework/Preferences" \
+              "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
+            rm "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
           fi
 
           echo "$THEOS/bin" >> "$GITHUB_PATH"
