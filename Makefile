@@ -34,3 +34,5 @@ before-package::
 	@mkdir -p $(THEOS_STAGING_DIR)/Library/PreferenceLoader/Preferences
 	@cp prefs/ImportPrefs.plist $(THEOS_STAGING_DIR)/Library/PreferenceLoader/Preferences/ImportPrefs.plist
 	@cp prefs/entry.plist $(THEOS_STAGING_DIR)/Library/PreferenceLoader/Preferences/entry.plist
+	@mkdir -p $(THEOS_STAGING_DIR)/Library/PreferenceBundles/ImportPrefs.bundle
+	@cp prefs/Info.plist $(THEOS_STAGING_DIR)/Library/PreferenceBundles/ImportPrefs.bundle/Info.plist
