@@ -33,10 +33,13 @@ jobs:
 
           # Download Preferences headers
           mkdir -p "$THEOS/include/Preferences"
-          curl -L -o "$THEOS/include/Preferences/PSListController.h" https://raw.githubusercontent.com/theos/headers/master/Preferences/PSListController.h
-          curl -L -o "$THEOS/include/Preferences/PSSpecifier.h" https://raw.githubusercontent.com/theos/headers/master/Preferences/PSSpecifier.h
-          curl -L -o "$THEOS/include/Preferences/PSViewController.h" https://raw.githubusercontent.com/theos/headers/master/Preferences/PSViewController.h
-          curl -L -o "$THEOS/include/Preferences/Preferences.h" https://raw.githubusercontent.com/theos/headers/master/Preferences/Preferences.h
+          pushd "$THEOS/include/Preferences"
+          curl -LO https://raw.githubusercontent.com/theos/headers/master/Preferences/PSListController.h
+          curl -LO https://raw.githubusercontent.com/theos/headers/master/Preferences/PSSpecifier.h
+          curl -LO https://raw.githubusercontent.com/theos/headers/master/Preferences/PSTableCell.h
+          curl -LO https://raw.githubusercontent.com/theos/headers/master/Preferences/PSViewController.h
+          curl -LO https://raw.githubusercontent.com/theos/headers/master/Preferences/Preferences.h
+          popd
           echo "$THEOS/bin" >> "$GITHUB_PATH"
 
           SDK_NAME="$(ls "$THEOS/sdks" | grep -E '^iPhoneOS[0-9]+\.[0-9]+\.sdk$' | sort -V | tail -n 1)"
