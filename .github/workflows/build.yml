@@ -22,7 +22,7 @@ jobs:
           echo "DPKG_BIN=$(brew --prefix dpkg)/libexec/dpkg" >> "$GITHUB_ENV"
           echo "$(brew --prefix dpkg)/libexec/dpkg" >> "$GITHUB_PATH"
 
-      - name: Setup Theos
+      - name: Setup Theos + Preferences Framework
         run: |
           git clone --recursive https://github.com/theos/theos.git "$THEOS"
 
@@ -32,9 +32,7 @@ jobs:
           fi
 
           # Download iOS SDK
-          curl -LO https://github.com/theos/sdks/archive/master.zip
-          unzip master.zip
-          mv sdks-master/* "$THEOS/sdks/"
+          curl -L https://github.com/theos/sdks/releases/download/master/iPhoneOS14.5.sdk.tar.xz | tar -xJ -C "$THEOS/sdks/"
 
           # Download Preferences headers
           mkdir -p "$THEOS/include/Preferences"
@@ -45,18 +43,30 @@ jobs:
           curl -LO https://raw.githubusercontent.com/theos/headers/master/Preferences/PSViewController.h
           curl -LO https://raw.githubusercontent.com/theos/headers/master/Preferences/Preferences.h
           popd
-          echo "$THEOS/bin" >> "$GITHUB_PATH"
 
-          SDK_NAME="$(ls "$THEOS/sdks" | grep -E '^iPhoneOS[0-9]+\.[0-9]+\.sdk$' | sort -V | while read -r sdk; do
-            if [ -d "$THEOS/sdks/$sdk/System/Library/PrivateFrameworks/Preferences.framework" ]; then
-              echo "$sdk"
-            fi
-          done | tail -n 1)"
-          if [ -z "$SDK_NAME" ]; then
-            SDK_NAME="$(ls "$THEOS/sdks" | grep -E '^iPhoneOS[0-9]+\.[0-9]+\.sdk$' | sort -V | tail -n 1)"
+          # Create Preferences framework stub if missing
+          if [ ! -d "$THEOS/vendor/Frameworks/Preferences.framework" ]; then
+            mkdir -p "$THEOS/vendor/Frameworks/Preferences.framework"
+            printf '%s\n' \
+              '--- !tapi-tbd-v3' \
+              'archs:           [ arm64, arm64e ]' \
+              "uuids:           [ 'arm64: 00000000-0000-0000-0000-000000000000' ]" \
+              'platform:        ios' \
+              'install-name:    /System/Library/PrivateFrameworks/Preferences.framework/Preferences' \
+              'exports:' \
+              '  - archs:       [ arm64, arm64e ]' \
+              '    symbols:     [ _OBJC_CLASS_$_PSListController, _OBJC_CLASS_$_PSSpecifier ]' \
+              > "$THEOS/vendor/Frameworks/Preferences.framework/Preferences.tbd"
           fi
-          SDK_VERSION="${SDK_NAME#iPhoneOS}"
-          SDK_VERSION="${SDK_VERSION%.sdk}"
+          if [ ! -e "$THEOS/vendor/lib/libPreferences.dylib" ]; then
+            mkdir -p "$THEOS/vendor/lib"
+            printf '%s\n' 'void PSListController() {}' > "$THEOS/vendor/lib/stub.c"
+            clang -dynamiclib -o "$THEOS/vendor/lib/libPreferences.dylib" "$THEOS/vendor/lib/stub.c"
+            rm "$THEOS/vendor/lib/stub.c"
+          fi
+
+          echo "$THEOS/bin" >> "$GITHUB_PATH"
+          SDK_VERSION="14.5"
           echo "SDKVERSION=$SDK_VERSION" >> "$GITHUB_ENV"
           echo "TARGET=iphone:clang:$SDK_VERSION:12.0" >> "$GITHUB_ENV"
 
