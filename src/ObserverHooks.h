@@ -1,8 +1,10 @@
+#import <Foundation/Foundation.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void InitLineage2MImporter(void);
+void InitObserverHooks(void);
 
 #ifdef __cplusplus
 }

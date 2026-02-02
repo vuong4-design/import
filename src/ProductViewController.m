@@ -1,6 +1,7 @@
 #import "ProductViewController.h"
 
 #import "SharedLibraries/ProductViewElementCreator.h"
+#import "ExportManager.h"
 
 @interface ProductViewController ()<UIGestureRecognizerDelegate>
 @end
@@ -37,6 +38,25 @@
 }
 
 - (void)handleTap:(UITapGestureRecognizer *)recognizer {
+	BOOL isExportMode = [ExportManager shared].exportMode;
+	if (!isExportMode && self.data.inventoryID.length > 0) {
+		NSDictionary *payload = @{
+			@"inventoryID": self.data.inventoryID,
+			@"prodID": self.data.prodID ?: @""
+		};
+
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[
+				[NSNotificationCenter defaultCenter]
+					postNotificationName:@"notifyImportItem"
+												object:nil
+											userInfo:payload
+			];
+		});
+
+		return;
+	}
+
 	// Emit productName to listener to perform pay operation.
 	NSDictionary *nProdID = [NSDictionary dictionaryWithObject:self.data.prodID forKey:@"prodID"];
 

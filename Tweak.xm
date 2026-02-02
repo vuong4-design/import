@@ -1,22 +1,28 @@
 #import "Foundation/Foundation.h"
+#import <StoreKit/StoreKit.h>
+#import <objc/runtime.h>
 
-#import "src/Lineage2MImporter.h"
-#import "src/ArknightsImporter.h"
-#import "src/LineageMLiveImporter.h"
-#import "src/SnailImporter.h"
+#import "src/TweakManager.h"
 
 %ctor {
 	NSLog(@"DEBUG* import extension started!");
-
-	// 天堂 2 M
-	InitLineage2MImporter();
-
-	// 明日方舟
-	InitArknightsImporter();
-
-	// 天堂 M
-	InitLineageMLiveImporter();
-
-	// 最強蝸牛
-	InitSnailImporter();
+	unsigned int classCount = 0;
+	Class *classes = objc_copyClassList(&classCount);
+	if (classes) {
+		NSMutableArray<NSString *> *observerClasses = [[NSMutableArray alloc] init];
+		for (unsigned int i = 0; i < classCount; i++) {
+			Class cls = classes[i];
+			if (!cls) {
+				continue;
+			}
+			if (class_conformsToProtocol(cls, @protocol(SKPaymentTransactionObserver))) {
+				[observerClasses addObject:NSStringFromClass(cls)];
+			}
+		}
+		free(classes);
+		NSLog(@"DEBUG* SKPaymentTransactionObserver classes: %@", observerClasses);
+	} else {
+		NSLog(@"DEBUG* failed to enumerate classes");
+	}
+	[[TweakManager sharedManager] start];
 }

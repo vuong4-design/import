@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>cell</key>
+		<string>PSGroupCell</string>
+		<key>label</key>
+		<string>Import Settings</string>
+		<key>footerText</key>
+		<string>These settings control which apps are enabled and whether universal StoreKit hooks are active.</string>
+	</dict>
+	<dict>
+		<key>cell</key>
+		<string>PSSwitchCell</string>
+		<key>default</key>
+		<true/>
+		<key>key</key>
+		<string>EnableForAllApps</string>
+		<key>label</key>
+		<string>Enable for all apps</string>
+	</dict>
+	<dict>
+		<key>cell</key>
+		<string>PSSwitchCell</string>
+		<key>default</key>
+		<true/>
+		<key>key</key>
+		<string>EnableUniversalHooks</string>
+		<key>label</key>
+		<string>Universal hooks</string>
+	</dict>
+	<dict>
+		<key>cell</key>
+		<string>PSGroupCell</string>
+		<key>footerText</key>
+		<string>Resetting will delete the stored configuration and restore defaults on next launch.</string>
+	</dict>
+	<dict>
+		<key>cell</key>
+		<string>PSButtonCell</string>
+		<key>action</key>
+		<string>resetConfiguration:</string>
+		<key>label</key>
+		<string>Reset configuration</string>
+	</dict>
+</array>
+</plist>

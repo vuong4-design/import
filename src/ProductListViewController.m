@@ -1,5 +1,6 @@
 #import "SharedLibraries/HttpUtil.h"
 #import "SharedLibraries/ProductViewElementCreator.h"
+#import "ExportManager.h"
 
 #import "ProductListViewController.h"
 #import "ProductViewController.h"
@@ -34,6 +35,8 @@
 
 	UIStackView *headerRow = [self createHeaderRow];
 	[self.prodsStackView addArrangedSubview:headerRow];
+	[self setupHistoryStackView];
+	[self.contentView addSubview:self.historyStackView];
 
 	[self setupLayout];
 
@@ -59,6 +62,14 @@
 					 object:self
 	];
 
+	[
+		[NSNotificationCenter defaultCenter]
+			addObserver:self
+				 selector:@selector(refreshHistoryObserver:)
+						 name:@"notifyTransactionHistoryUpdated"
+					 object:nil
+	];
+
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[
 			[NSNotificationCenter defaultCenter]
@@ -70,6 +81,7 @@
 	// Fetch inventory status by bundleID
 	NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
 	[self fetchInventoryAndReact: bundleIdentifier];
+	[self refreshHistory];
 }
 
 - (void) refreshProductsObserver:(NSNotification *)notification {
@@ -88,6 +100,12 @@
 		NSArray * nProds = [userInfo objectForKey:@"products"];
 
 		[self renderProductList: nProds];
+	}
+}
+
+- (void)refreshHistoryObserver:(NSNotification *)notification {
+	if ([[notification name] isEqualToString:@"notifyTransactionHistoryUpdated"]) {
+		[self refreshHistory];
 	}
 }
 
@@ -128,6 +146,7 @@
 					// Initialize Product class.
 					NSString *prodName = (NSString *)prod[@"prod_name"];
 					NSString *prodID = (NSString *)prod[@"prod_id"];
+					NSString *inventoryID = prod[@"inventory_id"] ?: prod[@"inventoryID"];
 					NSNumber *price = (NSNumber *)prod[@"price"];
 					NSNumber *quantity = (NSNumber *)prod[@"quantity"];
 
@@ -135,6 +154,7 @@
 						[Product alloc]
 							initWithProdName: prodName
 											  prodID: prodID
+									 inventoryID: inventoryID
 												 price: price
 											quantity: quantity
 					];
@@ -184,6 +204,26 @@
 	}
 }
 
+- (void)refreshHistory {
+	NSArray<NSDictionary *> *history = [[ExportManager shared] transactionHistory];
+	[self.historyStackView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+
+	UILabel *titleLabel = [ProductViewElementCreator createLabel:@"Transaction History"];
+	titleLabel.textAlignment = NSTextAlignmentLeft;
+	[self.historyStackView addArrangedSubview:titleLabel];
+
+	for (NSDictionary *entry in history) {
+		NSString *type = entry[@"type"] ?: @"";
+		NSString *productID = entry[@"productID"] ?: @"";
+		NSString *status = entry[@"status"] ?: @"";
+		NSNumber *timestamp = entry[@"timestamp"] ?: @0;
+		NSString *line = [NSString stringWithFormat:@"%@ | %@ | %@ | %@", type, productID, status, timestamp];
+		UILabel *row = [ProductViewElementCreator createLabel:line];
+		row.textAlignment = NSTextAlignmentLeft;
+		[self.historyStackView addArrangedSubview:row];
+	}
+}
+
 - (void) setupScrollView {
 	self.scrollView = [[UIScrollView alloc]init];
 	self.scrollView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -209,6 +249,14 @@
   self.prodsStackView.translatesAutoresizingMaskIntoConstraints = NO;
 }
 
+- (void)setupHistoryStackView {
+	self.historyStackView = [[UIStackView alloc] init];
+	self.historyStackView.axis = UILayoutConstraintAxisVertical;
+	self.historyStackView.distribution = UIStackViewDistributionEqualSpacing;
+	self.historyStackView.spacing = 8;
+	self.historyStackView.translatesAutoresizingMaskIntoConstraints = NO;
+}
+
 - (void)setupLayout {
 	@try {
 		[self.scrollView.topAnchor constraintEqualToAnchor:self.view.layoutMarginsGuide.topAnchor constant:20.0].active = YES;
@@ -225,14 +273,17 @@
 		[self.contentView.widthAnchor constraintEqualToAnchor:self.scrollView.widthAnchor].active = YES;
 
 
-		// Products stack view layout.
-		[self.prodsStackView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor].active = YES;
-		[self.prodsStackView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor].active = YES;
-		[self.prodsStackView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor].active = YES;
-		[self.prodsStackView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor].active = YES;
-	} @catch (NSException *exception) {
-	   NSLog(@"DEBUG* exception %@", exception.reason);
-	}
+	// Products stack view layout.
+	[self.prodsStackView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor].active = YES;
+	[self.prodsStackView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor].active = YES;
+	[self.prodsStackView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor].active = YES;
+	[self.historyStackView.topAnchor constraintEqualToAnchor:self.prodsStackView.bottomAnchor constant:30.0].active = YES;
+	[self.historyStackView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor].active = YES;
+	[self.historyStackView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor].active = YES;
+	[self.historyStackView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor].active = YES;
+} @catch (NSException *exception) {
+   NSLog(@"DEBUG* exception %@", exception.reason);
+}
 }
 
 - (UIStackView *) createHeaderRow {
