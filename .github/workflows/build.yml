@@ -50,12 +50,23 @@ jobs:
           # Create Preferences framework stub if missing
           if [ ! -f "$THEOS/vendor/Frameworks/Preferences.framework/Preferences" ]; then
             mkdir -p "$THEOS/vendor/Frameworks/Preferences.framework"
-            printf '%s\n' 'void PSListController() {}' > "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
+            cat > "$THEOS/vendor/Frameworks/Preferences.framework/stub.m" <<'EOF'
+#import <Foundation/Foundation.h>
+
+@interface PSListController : NSObject {
+  id _specifiers;
+}
+@end
+
+@implementation PSListController
+@end
+EOF
             clang -dynamiclib -isysroot "$THEOS/sdks/iPhoneOS14.5.sdk" -target arm64-apple-ios12.0 \
               -install_name /System/Library/PrivateFrameworks/Preferences.framework/Preferences \
+              -framework Foundation -fobjc-arc \
               -o "$THEOS/vendor/Frameworks/Preferences.framework/Preferences" \
-              "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
-            rm "$THEOS/vendor/Frameworks/Preferences.framework/stub.c"
+              "$THEOS/vendor/Frameworks/Preferences.framework/stub.m"
+            rm "$THEOS/vendor/Frameworks/Preferences.framework/stub.m"
           fi
 
           echo "$THEOS/bin" >> "$GITHUB_PATH"
