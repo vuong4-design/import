@@ -5,7 +5,7 @@
 	<key>entry</key>
 	<dict>
 		<key>bundle</key>
-		<string>ImportPrefs</string>
+		<string>com.huangc28.importprefs</string>
 		<key>cell</key>
 		<string>PSLinkCell</string>
 		<key>detail</key>
