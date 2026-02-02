@@ -28,7 +28,7 @@ jobs:
 
           # Ensure vendor frameworks are available for linking private frameworks like Preferences
           if [ ! -d "$THEOS/vendor/Frameworks/Preferences.framework" ]; then
-            git clone --depth 1 https://github.com/theos/vendor.git "$THEOS/vendor"
+            git -C "$THEOS" submodule update --init --recursive vendor
           fi
 
           # Download iOS SDK
