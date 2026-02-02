@@ -32,9 +32,10 @@ jobs:
           fi
 
           # Download iOS SDK
-          SDK_ARCHIVE="$RUNNER_TEMP/iPhoneOS14.5.sdk.tar.xz"
-          curl -L -o "$SDK_ARCHIVE" https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz
-          tar -xJf "$SDK_ARCHIVE" -C "$THEOS/sdks/"
+          SDK_TEMP="$RUNNER_TEMP/sdks"
+          git clone --depth 1 https://github.com/theos/sdks.git "$SDK_TEMP"
+          mkdir -p "$THEOS/sdks"
+          mv "$SDK_TEMP/iPhoneOS14.5.sdk" "$THEOS/sdks/"
 
           # Download Preferences headers
           mkdir -p "$THEOS/include/Preferences"
