@@ -33,7 +33,7 @@ jobs:
 
           # Download iOS SDK
           SDK_ARCHIVE="$RUNNER_TEMP/iPhoneOS14.5.sdk.tar.xz"
-          curl -L -o "$SDK_ARCHIVE" https://github.com/theos/sdks/releases/download/master/iPhoneOS14.5.sdk.tar.xz
+          curl -L -o "$SDK_ARCHIVE" https://raw.githubusercontent.com/theos/sdks/master/iPhoneOS14.5.sdk.tar.xz
           tar -xJf "$SDK_ARCHIVE" -C "$THEOS/sdks/"
 
           # Download Preferences headers
