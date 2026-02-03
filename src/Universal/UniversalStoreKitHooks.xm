@@ -12,13 +12,24 @@
 %hook SKPaymentQueue
 
 - (void)addTransactionObserver:(id<SKPaymentTransactionObserver>)observer {
+    if (!observer) return;
     NSString *className = NSStringFromClass([observer class]);
-    NSLog(@"DEBUG* [Universal] App registered observer: %@", className);
     
-    // Track observer for later use
-    [[ObserverManager shared] trackObserver:observer];
-    
-    %orig;
+    // Check if it's one of our internal observers
+    if ([observer isKindOfClass:[VBStoreKitManager class]] || [observer isKindOfClass:[ObserverManager class]]) {
+        // Allow our managers to register with the real StoreKit
+        NSLog(@"DEBUG* [Universal] Registering internal observer: %@", className);
+        %orig(observer);
+    } else {
+        // Hijack: Capture app's observer, but DON'T let StoreKit see it directly.
+        // This ensures the app doesn't receive transaction updates directly from StoreKit.
+        // Instead, ObserverManager will route transactions to it manually (if not in Export mode).
+        
+        NSLog(@"DEBUG* [Universal] Hijacking app observer: %@", className);
+        [[ObserverManager shared] trackObserver:observer];
+        
+        // IMPORTANT: We do NOT call %orig here.
+    }
 }
 
 - (void)removeTransactionObserver:(id<SKPaymentTransactionObserver>)observer {
@@ -30,56 +41,7 @@
 }
 
 // Intercept transactions and route them
-- (void)setTransactions:(NSArray *)transactions {
-    // This is internal, but we want to intercept 'updatedTransactions' calls usually.
-    // The SKPaymentQueue calls observers. We want to intercept that call.
-    // However, since we track observers, we can just intercept the primary transaction handling if possible.
-    // Or we can try to hook `paymentQueue:updatedTransactions:` on the *observers* themselves?
-    // BUT we don't know the observer classes at compile time easily.
-    // CONSTANT EXCEPTION: We hook `SKPaymentQueue`'s internal method that notifies observers? 
-    // OR we act as a proxy observer?
-    
-    // STRATEGY: 
-    // 1. We inject OUR observer (VBStoreKitManager) via defaultQueue.
-    // 2. We hook observer registration to keeping track of others.
-    // BUT SKPaymentQueue will notify ALL observers. We cannot easily "block" others unless we remove them or hook their callback.
-    // Hooking the callback dynamically is what Phase 3 original plan (DynamicHooker) was.
-    // 
-    // "UniversalStoreKitHooks" plan logic said:
-    // "Universal->>Observer: routeTransactions()"
-    // AND "Import mode: Observer->>VB: handle, Observer->>App: let app handle".
-    // 
-    // To achieve "BLOCKING" app observers in Export Mode, we MUST ensure the App Observers DO NOT receive the call from SKPaymentQueue directly.
-    // If SKPaymentQueue holds them, it calls them.
-    // 
-    // FIX: SWIZZLE `addTransactionObserver:` to NOT actually add them to SKPaymentQueue if we want full control?
-    // OR: We add them to our ObserverManager, but passed `nil` or `self` (proxy) to real SKPaymentQueue?
-    // If we don't add them to SKPaymentQueue, they get nothing. We (ObserverManager) get events, then forward to them manually.
-    // 
-    // REVISED STRATEGY for `addTransactionObserver:`
-    // 1. When App calls `addTransactionObserver:realObserver`:
-    //    - We call `[[ObserverManager shared] trackObserver:realObserver]`.
-    //    - We DO NOT call `%orig` (so realObserver is NOT added to StoreKit).
-    // 2. We ensure `ObserverManager` (or VBStoreKitManager) IS added to StoreKit (once).
-    // 3. When StoreKit callbacks our observer, ObserverManager routes to `realObserver` if needed.
-    
-    NSString *className = NSStringFromClass([observer class]);
-    
-    if ([observer isKindOfClass:[VBStoreKitManager class]] || [observer isKindOfClass:[ObserverManager class]]) {
-        // Allow our managers to register real
-        %orig;
-    } else {
-        // Hijack: Capture observer, but DON'T let StoreKit parse it directly.
-        // Wait, if we don't let StoreKit have it, we must ensure we proxy ALL methods (paymentQueue:removedTransactions:, etc).
-        // SKPaymentTransactionObserver has optional methods.
-        
-        NSLog(@"DEBUG* [Universal] Hijacking observer: %@", className);
-        [[ObserverManager shared] trackObserver:observer];
-        
-        // We do NOT call %orig here, effectively hiding transactions from the app
-        // UNLESS we decide to forward them via ObserverManager.
-    }
-}
+
 
 %end
 
