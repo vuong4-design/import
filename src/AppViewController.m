@@ -16,18 +16,14 @@
 
 @implementation AppViewController
 
+#import "Core/iOSVersionHelper.h"
+
 - (void) viewDidLoad {
 	[super viewDidLoad];
 
 	// Initialize AppView here.
-	UIView *appView = [
-		[UIView alloc] initWithFrame:CGRectMake(
-			0,
-			0,
-			[[UIScreen mainScreen] applicationFrame].size.width,
-			[[UIScreen mainScreen] applicationFrame].size.height
-		)
-	];
+    CGRect frame = [iOSVersionHelper safeApplicationFrame];
+	UIView *appView = [[UIView alloc] initWithFrame:frame];
 
 	appView.userInteractionEnabled = YES;
 	appView.backgroundColor = [UIColor whiteColor];

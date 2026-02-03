@@ -10,15 +10,20 @@
 @implementation ProductListViewController
 @synthesize products;
 
+#import "Core/iOSVersionHelper.h"
+
 - (void) viewDidLoad {
 	[super viewDidLoad];
-
+    
+    CGRect screenFrame = [iOSVersionHelper safeApplicationFrame];
+    // Adjust height for top bar and margins if needed, or keeping original relative logic
+    // Original was y=80 and height - 50.
 	self.view = [
 		[UIView alloc] initWithFrame: CGRectMake(
 			0,
 			80,
-			[[UIScreen mainScreen] applicationFrame].size.width,
-			[[UIScreen mainScreen] applicationFrame].size.height - 50
+			screenFrame.size.width,
+			screenFrame.size.height - 50
 		)
 	];
 
@@ -187,9 +192,10 @@
 - (void) setupScrollView {
 	self.scrollView = [[UIScrollView alloc]init];
 	self.scrollView.translatesAutoresizingMaskIntoConstraints = NO;
+    CGRect screenFrame = [iOSVersionHelper safeApplicationFrame];
 	self.scrollView.contentSize = CGSizeMake(
-		[[UIScreen mainScreen] applicationFrame].size.width,
-		[[UIScreen mainScreen] applicationFrame].size.height
+		screenFrame.size.width,
+		screenFrame.size.height
 	);
 }
 

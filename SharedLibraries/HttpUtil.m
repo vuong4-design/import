@@ -61,6 +61,16 @@ completedHandler:(void (^)(NSData *data, NSURLResponse *response, NSError *error
 	}
 }
 
+- (void)collectProducts:(NSDictionary *)payload
+             completion:(void (^)(BOOL success))completion {
+    // Stub implementation - replace with actual network call
+    // Endpoint: /api/products/collect
+    NSLog(@"DEBUG* [HttpUtil] Collecting products: %@", payload);
+    if (completion) {
+        completion(YES);
+    }
+}
+
 - (void)markItemAsImported:(NSString *)inventoryID
                 completion:(void (^)(BOOL success))completion {
 	(void)inventoryID;

@@ -1,22 +1,38 @@
 #import "Foundation/Foundation.h"
+#import "src/Core/TweakManager.h"
 
-#import "src/Lineage2MImporter.h"
-#import "src/ArknightsImporter.h"
-#import "src/LineageMLiveImporter.h"
-#import "src/SnailImporter.h"
+// Universal hooks - NO app-specific imports needed!
+extern "C" void InitUniversalStoreKitHooks(void);
 
 %ctor {
-	NSLog(@"DEBUG* import extension started!");
+	@autoreleasepool {
+		NSLog(@"DEBUG* Import Tweak Loaded");
 
-	// 天堂 2 M
-	InitLineage2MImporter();
+		// Check iOS version
+		if (@available(iOS 13.0, *)) {
+            // Good
+        } else {
+			NSLog(@"DEBUG* iOS version too low, skipping");
+			return;
+		}
 
-	// 明日方舟
-	InitArknightsImporter();
+		NSString *bundleID = [[NSBundle mainBundle] bundleIdentifier];
 
-	// 天堂 M
-	InitLineageMLiveImporter();
+		// Check whitelist via TweakManager
+		if (![[TweakManager shared] shouldEnableForBundle:bundleID]) {
+			// Uncomment next line to debug if whitelist works
+			// NSLog(@"DEBUG* Bundle %@ not in whitelist, skipping", bundleID);
+			return;
+		}
 
-	// 最強蝸牛
-	InitSnailImporter();
+		NSLog(@"DEBUG* Import tweak starting for %@", bundleID);
+
+		// Initialize UNIVERSAL hooks - works for ALL apps!
+		InitUniversalStoreKitHooks();
+        
+        // Mark as initialized in TweakManager
+        [[TweakManager shared] initializeWithBundleID:bundleID];
+
+		NSLog(@"DEBUG* Universal StoreKit hooks initialized");
+	}
 }

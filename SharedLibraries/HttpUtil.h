@@ -23,6 +23,9 @@ completedHandler:(void (^)(NSData *data, NSURLResponse *response, NSError *error
 - (void)checkInventoryForProduct:(NSString *)productID
                        completion:(void (^)(BOOL exists, NSDictionary *item))completion;
 
+- (void)collectProducts:(NSDictionary *)payload
+             completion:(void (^)(BOOL success))completion;
+
 - (void)markItemAsImported:(NSString *)inventoryID
                 completion:(void (^)(BOOL success))completion;
 
