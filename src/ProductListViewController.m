@@ -7,10 +7,10 @@
 @interface ProductListViewController ()
 @end
 
+#import "Core/iOSVersionHelper.h"
+
 @implementation ProductListViewController
 @synthesize products;
-
-#import "Core/iOSVersionHelper.h"
 
 - (void) viewDidLoad {
 	[super viewDidLoad];
