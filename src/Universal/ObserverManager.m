@@ -71,4 +71,8 @@
     }
 }
 
+- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray<SKPaymentTransaction *> *)transactions {
+    [self routeTransactions:transactions toQueue:queue];
+}
+
 @end
