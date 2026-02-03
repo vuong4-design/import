@@ -14,9 +14,9 @@
 @interface AppViewController ()<UIGestureRecognizerDelegate>
 @end
 
-@implementation AppViewController
-
 #import "Core/iOSVersionHelper.h"
+
+@implementation AppViewController
 
 - (void) viewDidLoad {
 	[super viewDidLoad];
