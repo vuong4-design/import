@@ -62,4 +62,9 @@
     }
 }
 
+- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
+    // Collect products from response
+    [self collectProducts:response.products];
+}
+
 @end
