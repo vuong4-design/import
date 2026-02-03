@@ -1,7 +1,7 @@
 {
   "name": "import-tweak-backend",
   "version": "1.0.0",
-  "description": "Backend for iOS Import Tweak",
+  "description": "Backend for iOS 12-16 Import Tweak",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
