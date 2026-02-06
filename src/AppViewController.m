@@ -74,7 +74,7 @@
 }
 
 - (void) renderImportApp:(UIApplication *)app {
-    UIWindow *window = [iOSVersionHelper safeApplicationFrame] ? nil : ([UIApplication sharedApplication].delegate).window;
+    UIWindow *window = ([UIApplication sharedApplication].delegate).window;
     if (!window) {
         // Find key window safely
         if (@available(iOS 13.0, *)) {
