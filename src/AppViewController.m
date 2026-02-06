@@ -74,15 +74,66 @@
 }
 
 - (void) renderImportApp:(UIApplication *)app {
-	UIWindow *window = ([UIApplication sharedApplication].delegate).window ;
+    UIWindow *window = [iOSVersionHelper safeApplicationFrame] ? nil : ([UIApplication sharedApplication].delegate).window;
+    if (!window) {
+        // Find key window safely
+        if (@available(iOS 13.0, *)) {
+            for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
+                if (scene.activationState == UISceneActivationStateForegroundActive) {
+                    for (UIWindow *w in scene.windows) {
+                        if (w.isKeyWindow) { window = w; break; }
+                    }
+                }
+            }
+        }
+        if (!window) window = [UIApplication sharedApplication].keyWindow;
+    }
 
-	// Override the app view.
-	self.view.center = window.center;
+    if (!window) return;
 
-	// Override the app controller.
-	window.rootViewController = self;
+    // Create a container view for our tweak UI that sits on top
+    // Start with just a small button or minimized view
+    CGFloat buttonSize = 50.0;
+    UIButton *floatingButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    floatingButton.frame = CGRectMake(20, 100, buttonSize, buttonSize);
+    floatingButton.backgroundColor = [UIColor systemBlueColor];
+    floatingButton.layer.cornerRadius = buttonSize / 2;
+    [floatingButton setTitle:@"🛠" forState:UIControlStateNormal];
+    [floatingButton addTarget:self action:@selector(toggleMenu) forControlEvents:UIControlEventTouchUpInside];
+    
+    // Add pan gesture to move button
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePan:)];
+    [floatingButton addGestureRecognizer:pan];
+    
+    [window addSubview:floatingButton];
+    
+    // Configure main view to be hidden initially or overlay
+    self.view.frame = CGRectMake(0, 0, window.bounds.size.width, window.bounds.size.height);
+    self.view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.0]; // Transparent initially
+    self.view.hidden = YES; // Hidden by default
+    
+    // Add close button to self.view if not present in AppTopViewController
+    
+    [window addSubview:self.view];
+    [window bringSubviewToFront:floatingButton];
+    
+    // Store reference to button if needed (using associated object or property if added)
+    // For specific requirement "menu overlay occupying full screen", we fixed it by making it toggleable via floating button
+}
 
-	[window addSubview:self.view];
+- (void)handlePan:(UIPanGestureRecognizer *)recognizer {
+    UIView *view = recognizer.view;
+    CGPoint translation = [recognizer translationInView:view.superview];
+    view.center = CGPointMake(view.center.x + translation.x, view.center.y + translation.y);
+    [recognizer setTranslation:CGPointZero inView:view.superview];
+}
+
+- (void)toggleMenu {
+    self.view.hidden = !self.view.hidden;
+    if (!self.view.hidden) {
+        self.view.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.8]; // Dim background when active
+        [[self.view superview] bringSubviewToFront:self.view];
+    }
 }
 
 - (void)setupModeToggle {
